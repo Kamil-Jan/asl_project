@@ -34,13 +34,6 @@ def convert(cfg: DictConfig):
     )
     print("ONNX export complete.")
 
-    # TensorRT Hint (since we are in Python environment without trt installed usually)
-    print("\nTo convert to TensorRT, run the following command (requires trtexec):")
-    # Using trtexec CLI
-    # print(
-    #     f"trtexec --onnx={output_path}
-    # )
-
 
 if __name__ == "__main__":
     convert()

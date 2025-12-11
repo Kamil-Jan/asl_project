@@ -1,5 +1,4 @@
 import glob
-import subprocess
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -26,7 +25,6 @@ class ASLDataset(Dataset):
         img_path = self.image_paths[idx]
         label = self.labels[idx]
 
-        # Use cv2 for speed, convert BGR to RGB
         image = cv2.imread(img_path)
         if image is None:
             raise ValueError(f"Failed to load image: {img_path}")
@@ -47,7 +45,6 @@ class ASLDataModule(pl.LightningDataModule):
         self.cfg = cfg
         self.img_h, self.img_w = cfg.data.img_size
 
-        # Augmentations
         self.train_transform = A.Compose(
             [
                 A.Resize(self.img_h, self.img_w),
@@ -72,18 +69,6 @@ class ASLDataModule(pl.LightningDataModule):
 
         self.train_dataset, self.val_dataset, self.test_dataset = None, None, None
 
-    def prepare_data(self):
-        """Use DVC to pull data if not present."""
-        root = Path(self.cfg.data.root_dir)
-        if not root.exists() or not any(root.iterdir()):
-            print(f"Data directory {root} is empty. Attempting DVC pull...")
-            try:
-                subprocess.run(["dvc", "pull"], check=True)
-                print("DVC pull successful.")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("WARNING: DVC pull failed")
-                # Here you could implement a fallback download_data() function
-
     def setup(self, stage: Optional[str] = None):
         if self.train_dataset:
             return
@@ -94,13 +79,11 @@ class ASLDataModule(pl.LightningDataModule):
         if not all_image_paths:
             raise FileNotFoundError(f"No images found in {root_dir}")
 
-        # Extract labels from folder names
         classes = sorted([d.name for d in root_dir.iterdir() if d.is_dir()])
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
 
         all_labels = [class_to_idx[Path(p).parent.name] for p in all_image_paths]
 
-        # Stratified Split
         train_paths, temp_paths, train_labels, temp_labels = train_test_split(
             all_image_paths,
             all_labels,

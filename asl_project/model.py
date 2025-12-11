@@ -26,10 +26,8 @@ class BaseASLModule(pl.LightningModule, ABC):
             task="multiclass", num_classes=num_classes, average="macro"
         )
 
-        # Loss
         self.loss_fn = nn.CrossEntropyLoss()
 
-        # Child classes must instantiate self.net
         self.net = None
 
     @abstractmethod
@@ -102,7 +100,7 @@ class BaselineCNN(BaseASLModule):
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Flatten(),
-            nn.Linear(128 * 28 * 28, self.hidden_dim),  # Assumes 224x224
+            nn.Linear(128 * 28 * 28, self.hidden_dim),
             nn.ReLU(),
             nn.Dropout(self.dropout),
             nn.Linear(self.hidden_dim, self.num_classes),
@@ -125,7 +123,6 @@ class TransferResNet(BaseASLModule):
         self.net = self.build_network()
 
     def build_network(self):
-        # Dynamically load from torchvision (e.g., models.resnet18)
         backbone_fn = getattr(models, self.backbone_name)
         weights = "DEFAULT" if self.pretrained else None
         model = backbone_fn(weights=weights)
@@ -134,7 +131,6 @@ class TransferResNet(BaseASLModule):
             for param in model.parameters():
                 param.requires_grad = False
 
-        # Replace the final FC layer (fc is specific to ResNet)
         in_features = model.fc.in_features
         model.fc = nn.Linear(in_features, self.num_classes)
         return model

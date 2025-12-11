@@ -49,9 +49,7 @@ class Predictor:
             input_name = self.ort_session.get_inputs()[0].name
             ort_inputs = {input_name: tensor.numpy()}
             logits = self.ort_session.run(None, ort_inputs)[0]
-            probs = np.exp(logits) / np.sum(
-                np.exp(logits), axis=1, keepdims=True
-            )  # Softmax
+            probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
             idx = np.argmax(probs)
             prob = probs[0][idx]
         else:
@@ -76,7 +74,7 @@ def run_webcam(cfg: DictConfig):
             break
 
         frame = cv2.flip(frame, 1)
-        roi = frame[100:400, 100:400]  # simple ROI
+        roi = frame[100:400, 100:400]
         label, prob = predictor.predict(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
 
         cv2.rectangle(frame, (100, 100), (400, 400), (0, 255, 0), 2)
