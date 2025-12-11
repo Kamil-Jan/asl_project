@@ -1,0 +1,28 @@
+defaults:
+  - _self_
+  - model: resnet
+  - data: default
+
+seed: 42
+
+logger:
+  experiment_name: "asl_recognition"
+  tracking_uri: "http://127.0.0.1:8080"
+
+trainer:
+  max_epochs: 20
+  accelerator: "auto"
+  devices: 1
+  check_val_every_n_epoch: 1
+
+callbacks:
+  early_stopping:
+    monitor: "val_loss"
+    patience: 5
+    mode: "min"
+  model_checkpoint:
+    dirpath: "models/checkpoints"
+    filename: "${model.name}-{epoch:02d}-{val_acc:.2f}"
+    monitor: "val_acc"
+    mode: "max"
+    save_top_k: 1

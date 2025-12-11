@@ -1,0 +1,9 @@
+model_type: "onnx"
+checkpoint_path: "models/checkpoints/best.ckpt"
+onnx_path: "models/model.onnx"
+class_names: [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  'del', 'nothing', 'space'
+]
+img_size: [200, 200]

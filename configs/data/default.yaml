@@ -1,0 +1,6 @@
+root_dir: "./data/ASL_Alphabet_Dataset"
+batch_size: 32
+num_workers: 4
+img_size: [200, 200]
+val_split: 0.1
+test_split: 0.1

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "asl_project"
+version = "0.1.0"
+description = "American Sign Language Recognition System"
+authors = ["Kamil-Jan"]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+torch = "*"
+torchvision = "*"
+pytorch-lightning = "*"
+hydra-core = "*"
+albumentations = "*"
+mlflow = "*"
+dvc = "*"
+onnx = "*"
+onnxruntime = "*"
+opencv-python = "*"
+pillow = "*"
+dvc-gdrive = "^3.0.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+flake8 = "*"
+pre-commit = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,5 @@
+_target_: asl_project.model.BaselineCNN
+num_classes: 29
+lr: 0.001
+hidden_dim: 512
+dropout: 0.5

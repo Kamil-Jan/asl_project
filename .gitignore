@@ -32,8 +32,12 @@ mlflow.db
 mlartifacts/
 
 # Data & Models
-data/
+data/*
+!data/*.dvc
+!data/.gitignore
+
 models/
+lightning_logs/
 *.ckpt
 *.onnx
 *.trt
@@ -41,3 +45,5 @@ models/
 # IDE
 .idea/
 .vscode/
+
+*/.DS_Store

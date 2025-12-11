@@ -1,0 +1,6 @@
+outs:
+- md5: 7f8efd0d9a363b22d708fc5b251e4106.dir
+  size: 4556805010
+  nfiles: 223102
+  hash: md5
+  path: ASL_Alphabet_Dataset
