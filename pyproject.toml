@@ -17,7 +17,7 @@ onnx = "*"
 onnxruntime = "*"
 opencv-python = "*"
 pillow = "*"
-dvc-gdrive = "^3.0.1"
+dvc-s3 = "^3.2.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

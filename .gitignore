@@ -27,7 +27,9 @@ multirun/
 
 # MLflow & DVC
 mlruns/
-.dvc/
+.dvc/cache
+.dvc/tmp
+
 mlflow.db
 mlartifacts/
 
@@ -47,3 +49,5 @@ lightning_logs/
 .vscode/
 
 */.DS_Store
+
+.env
