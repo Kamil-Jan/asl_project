@@ -1,0 +1,13 @@
+torch
+torchvision
+pytorch-lightning
+hydra-core
+omegaconf
+scikit-learn
+pandas
+pillow
+torchmetrics
+dvc
+mlflow
+albumentations
+opencv-python
