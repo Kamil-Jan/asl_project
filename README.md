@@ -76,7 +76,7 @@
 
    ```bash
    git clone https://github.com/Kamil-Jan/asl_project
-   cd mlops
+   cd asl_project
    ```
 
 2. **Установите Poetry (если еще не установлен):**
