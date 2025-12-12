@@ -1,4 +1,3 @@
-import glob
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -11,9 +10,11 @@ from omegaconf import DictConfig
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 
+from asl_project.utils import ensure_data_ready, infer_class_names
+
 
 class ASLDataset(Dataset):
-    def __init__(self, image_paths: List[str], labels: List[int], transform=None):
+    def __init__(self, image_paths: List[Path], labels: List[int], transform=None):
         self.image_paths = image_paths
         self.labels = labels
         self.transform = transform
@@ -25,7 +26,7 @@ class ASLDataset(Dataset):
         img_path = self.image_paths[idx]
         label = self.labels[idx]
 
-        image = cv2.imread(img_path)
+        image = cv2.imread(str(img_path))
         if image is None:
             raise ValueError(f"Failed to load image: {img_path}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -44,6 +45,8 @@ class ASLDataModule(pl.LightningDataModule):
         super().__init__()
         self.cfg = cfg
         self.img_h, self.img_w = cfg.data.img_size
+        self.train_dir = Path(cfg.data.train_dir)
+        self.class_names = list(cfg.data.class_names) if cfg.data.class_names else []
 
         self.train_transform = A.Compose(
             [
@@ -52,8 +55,8 @@ class ASLDataModule(pl.LightningDataModule):
                 A.HorizontalFlip(p=0.5),
                 A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, p=0.5),
                 A.RandomBrightnessContrast(p=0.5),
-                A.GaussianBlur(blur_limit=(3, 7), p=0.3),
-                A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
+                A.GaussianBlur(p=0.3),
+                A.GaussNoise(p=0.3),
                 A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
                 ToTensorV2(),
             ]
@@ -67,34 +70,56 @@ class ASLDataModule(pl.LightningDataModule):
             ]
         )
 
-        self.train_dataset, self.val_dataset, self.test_dataset = None, None, None
+        self.train_dataset: Optional[Dataset] = None
+        self.val_dataset: Optional[Dataset] = None
+        self.test_dataset: Optional[Dataset] = None
 
     def setup(self, stage: Optional[str] = None):
         if self.train_dataset:
             return
 
-        root_dir = Path(self.cfg.data.root_dir)
-        all_image_paths = glob.glob(str(root_dir / "*/*.jpg"))
+        dvc_target = (
+            self.cfg.paths.dvc_target
+            if hasattr(self.cfg, "paths") and hasattr(self.cfg.paths, "dvc_target")
+            else None
+        )
+        ensure_data_ready(self.cfg.data, dvc_target=dvc_target)
+
+        extensions = {"*.jpg", "*.png", "*.jpeg"}
+        all_image_paths = []
+        for ext in extensions:
+            all_image_paths.extend(self.train_dir.glob(f"**/{ext}"))
 
         if not all_image_paths:
-            raise FileNotFoundError(f"No images found in {root_dir}")
+            raise FileNotFoundError(f"No images found in {self.train_dir}")
 
-        classes = sorted([d.name for d in root_dir.iterdir() if d.is_dir()])
-        class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
+        if not self.class_names:
+            self.class_names = infer_class_names(self.train_dir)
 
-        all_labels = [class_to_idx[Path(p).parent.name] for p in all_image_paths]
+        class_to_idx = {cls_name: i for i, cls_name in enumerate(self.class_names)}
+
+        valid_paths = []
+        all_labels = []
+
+        for p in all_image_paths:
+            parent_name = p.parent.name
+            if parent_name in class_to_idx:
+                valid_paths.append(p)
+                all_labels.append(class_to_idx[parent_name])
 
         train_paths, temp_paths, train_labels, temp_labels = train_test_split(
-            all_image_paths,
+            valid_paths,
             all_labels,
             test_size=(self.cfg.data.val_split + self.cfg.data.test_split),
             stratify=all_labels,
             random_state=self.cfg.seed,
         )
 
-        rel_test_size = self.cfg.data.test_split / (
-            self.cfg.data.val_split + self.cfg.data.test_split
+        temp_split_size = self.cfg.data.val_split + self.cfg.data.test_split
+        rel_test_size = (
+            self.cfg.data.test_split / temp_split_size if temp_split_size > 0 else 0
         )
+
         val_paths, test_paths, val_labels, test_labels = train_test_split(
             temp_paths,
             temp_labels,
@@ -108,22 +133,24 @@ class ASLDataModule(pl.LightningDataModule):
         self.test_dataset = ASLDataset(test_paths, test_labels, self.val_transform)
 
     def train_dataloader(self):
+        is_mps = torch.backends.mps.is_available()
         return DataLoader(
             self.train_dataset,
             batch_size=self.cfg.data.batch_size,
             shuffle=True,
             num_workers=self.cfg.data.num_workers,
             persistent_workers=True,
-            pin_memory=True,
+            pin_memory=False if is_mps else True,
         )
 
     def val_dataloader(self):
+        is_mps = torch.backends.mps.is_available()
         return DataLoader(
             self.val_dataset,
             batch_size=self.cfg.data.batch_size,
             num_workers=self.cfg.data.num_workers,
             persistent_workers=True,
-            pin_memory=True,
+            pin_memory=False if is_mps else True,
         )
 
     def test_dataloader(self):

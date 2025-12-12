@@ -1,6 +1,38 @@
 root_dir: "./data/ASL_Alphabet_Dataset"
-batch_size: 32
+train_dir: "${data.root_dir}/asl_alphabet_train"
+test_dir: "${data.root_dir}/asl_alphabet_test"
+batch_size: 64
 num_workers: 4
 img_size: [200, 200]
 val_split: 0.1
 test_split: 0.1
+class_names:
+  - A
+  - B
+  - C
+  - D
+  - E
+  - F
+  - G
+  - H
+  - I
+  - J
+  - K
+  - L
+  - M
+  - N
+  - O
+  - P
+  - Q
+  - R
+  - S
+  - T
+  - U
+  - V
+  - W
+  - X
+  - Y
+  - Z
+  - del
+  - nothing
+  - space

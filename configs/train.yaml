@@ -9,8 +9,11 @@ logger:
   experiment_name: "asl_recognition"
   tracking_uri: "http://127.0.0.1:8080"
 
+paths:
+  dvc_target: "data/ASL_Alphabet_Dataset.dvc"
+
 trainer:
-  max_epochs: 20
+  max_epochs: 3
   accelerator: "auto"
   devices: 1
   check_val_every_n_epoch: 1
@@ -26,3 +29,5 @@ callbacks:
     monitor: "val_acc"
     mode: "max"
     save_top_k: 1
+
+auto_export_onnx: true

@@ -1,9 +1,15 @@
-model_type: "onnx"
-checkpoint_path: "models/checkpoints/best.ckpt"
+defaults:
+  - _self_
+  - model: resnet
+  - data: default
+
+runtime: "onnx"
+providers:
+  - "CPUExecutionProvider"
+checkpoint_path: "models/checkpoints/baseline_cnn-epoch=02-val_acc=0.75.ckpt"
 onnx_path: "models/model.onnx"
-class_names: [
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  'del', 'nothing', 'space'
-]
-img_size: [200, 200]
+class_names: ${data.class_names}
+img_size: ${data.img_size}
+confidence_threshold: 0.3
+input:
+  image_path: null

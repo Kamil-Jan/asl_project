@@ -13,13 +13,12 @@ class BaseASLModule(pl.LightningModule, ABC):
     Handles metrics, logging, and training loop, but delegates model definition.
     """
 
-    def __init__(self, num_classes: int, lr: float):
+    def __init__(self, name: str, num_classes: int, lr: float):
         super().__init__()
-        self.save_hyperparameters()
+        self.name = name
         self.lr = lr
         self.num_classes = num_classes
 
-        # Metrics
         self.train_acc = Accuracy(task="multiclass", num_classes=num_classes)
         self.val_acc = Accuracy(task="multiclass", num_classes=num_classes)
         self.val_f1 = F1Score(
@@ -78,14 +77,16 @@ class BaseASLModule(pl.LightningModule, ABC):
 class BaselineCNN(BaseASLModule):
     def __init__(
         self,
+        name: str,
         num_classes: int = 29,
         lr: float = 0.001,
         hidden_dim: int = 512,
         dropout: float = 0.5,
     ):
-        super().__init__(num_classes, lr)
+        super().__init__(name, num_classes, lr)
         self.hidden_dim = hidden_dim
         self.dropout = dropout
+        self.save_hyperparameters(ignore=["net"])
         self.net = self.build_network()
 
     def build_network(self):
@@ -100,7 +101,7 @@ class BaselineCNN(BaseASLModule):
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Flatten(),
-            nn.Linear(128 * 28 * 28, self.hidden_dim),
+            nn.Linear(128 * 25 * 25, self.hidden_dim),
             nn.ReLU(),
             nn.Dropout(self.dropout),
             nn.Linear(self.hidden_dim, self.num_classes),
@@ -110,16 +111,18 @@ class BaselineCNN(BaseASLModule):
 class TransferResNet(BaseASLModule):
     def __init__(
         self,
+        name: str,
         backbone_name: str = "resnet18",
         pretrained: bool = True,
         freeze_backbone: bool = False,
         num_classes: int = 29,
         lr: float = 0.0003,
     ):
-        super().__init__(num_classes, lr)
+        super().__init__(name, num_classes, lr)
         self.backbone_name = backbone_name
         self.pretrained = pretrained
         self.freeze_backbone = freeze_backbone
+        self.save_hyperparameters(ignore=["net"])
         self.net = self.build_network()
 
     def build_network(self):

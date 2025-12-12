@@ -42,7 +42,10 @@ models/
 lightning_logs/
 *.ckpt
 *.onnx
-*.trt
+
+# Plots
+plots/
+!plots/.gitkeep
 
 # IDE
 .idea/
@@ -51,3 +54,5 @@ lightning_logs/
 */.DS_Store
 
 .env
+
+node_modules/

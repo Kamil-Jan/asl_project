@@ -1,4 +1,5 @@
 _target_: asl_project.model.BaselineCNN
+name: "baseline_cnn"
 num_classes: 29
 lr: 0.001
 hidden_dim: 512

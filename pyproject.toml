@@ -5,26 +5,47 @@ description = "American Sign Language Recognition System"
 authors = ["Kamil-Jan"]
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 torch = "*"
 torchvision = "*"
+torchmetrics = "*"
 pytorch-lightning = "*"
 hydra-core = "*"
+omegaconf = "*"
 albumentations = "*"
 mlflow = "*"
 dvc = "*"
+dvc-s3 = "*"
 onnx = "*"
 onnxruntime = "*"
-opencv-python = "*"
+opencv-python-headless = "*"  # Headless для сервера легче
+matplotlib = "*"
 pillow = "*"
-dvc-s3 = "^3.2.2"
+fastapi = "*"
+uvicorn = "*"
+python-multipart = "*"
+fire = "*"
+gitpython = "*"
+tritonclient = {extras = ["http", "grpc"], version = "*"}
+boto3 = "*"
+psycopg2-binary = "^2.9.11"
+onnxscript = "^0.5.6"
+seaborn = "^0.13.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
 isort = "*"
 flake8 = "*"
 pre-commit = "*"
+pytest = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.black]
+line-length = 88
