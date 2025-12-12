@@ -75,7 +75,7 @@
 1. **Клонируйте репозиторий:**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Kamil-Jan/asl_project
    cd mlops
    ```
 
