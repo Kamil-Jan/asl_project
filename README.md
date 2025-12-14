@@ -1,6 +1,6 @@
 # American Sign Language (ASL) Alphabet Recognition
 
-Система распознавания букв американского языка жестов с использованием глубокого обучения. Проект реализует полный MLOps пайплайн от загрузки данных до продакшн-готового инференса с использованием современных практик машинного обучения.
+Система распознавания букв американского языка жестов с использованием глубокого обучения.
 
 ## Постановка задачи
 
@@ -14,7 +14,7 @@
 
 ## Метрики
 
-Основная метрика будет **Accuracy** (т.к. датасет сбалансирован). В качестве дополнительной метрики буду использовать **F1-Score**. Учитывая качество датасета и современные архитектуры, ожидаю получить accuracy на тесте >80%
+Основная метрика будет **Accuracy** (т.к. датасет сбалансирован). В качестве дополнительной метрики буду использовать **F1-Score**. Учитывая качество датасета и современные архитектуры, ожидаю получить accuracy на тесте >90%
 
 ## Валидация и тест
 
@@ -62,14 +62,6 @@
 
 Данный раздел описывает процедуру настройки окружения проекта для нового члена команды. После выполнения всех шагов вы сможете продолжить разработку, запустить обучение и выполнить предсказание модели.
 
-### Требования
-
-- Python >= 3.10
-- Poetry (для управления зависимостями)
-- Git
-- DVC (для управления данными)
-- Docker и Docker Compose (для MLflow)
-
 ### Установка окружения
 
 1. **Клонируйте репозиторий:**
@@ -79,7 +71,7 @@
    cd asl_project
    ```
 
-2. **Установите Poetry (если еще не установлен):**
+2. **Установите Poetry:**
 
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
@@ -97,27 +89,14 @@
    poetry install
    ```
 
-   Это установит все необходимые зависимости, включая:
-   - PyTorch и PyTorch Lightning
-   - Hydra для управления конфигурациями
-   - MLflow для отслеживания экспериментов
-   - DVC для управления данными
-   - ONNX и ONNX Runtime для экспорта и инференса
-   - И другие зависимости из `pyproject.toml`
-
 4. **Активируйте окружение:**
 
    ```bash
+   poetry self add poetry-plugin-shell
    poetry shell
    ```
 
-   Или используйте команды через `poetry run`:
-
-   ```bash
-   poetry run python -m asl_project.commands train
-   ```
-
-5. **Настройте pre-commit hooks (опционально, но рекомендуется):**
+5. **Настройте pre-commit hooks:**
 
    ```bash
    pre-commit install
@@ -131,56 +110,35 @@
    pre-commit run -a
    ```
 
-7. **Настройте DVC (если используется удаленное хранилище):**
-
-   Если данные хранятся в удаленном хранилище (S3, GCS и т.д.), настройте DVC:
+7. **Запуск MLFlow UI:**
 
    ```bash
-   dvc remote add -d <remote-name> <remote-url>
+   docker-compose up -d
+
+   poetry run mlflow server \
+       --backend-store-uri postgresql://mlflow:mlflow@localhost:5433/mlflow \
+       --default-artifact-root ./mlartifacts \
+       --host 0.0.0.0 \
+       --port 8080
    ```
-
-### Проверка готовности окружения
-
-После установки проверьте, что все работает:
-
-```bash
-# Проверка Python окружения
-poetry run python --version
-
-# Проверка доступности модулей
-poetry run python -c "import torch; import pytorch_lightning; print('OK')"
-
-# Проверка DVC
-dvc --version
-```
-
-Теперь окружение готово для работы с проектом!
 
 ## Train
 
 Данный раздел описывает процесс обучения модели, включая загрузку данных, предобработку и запуск обучения для различных вариантов моделей.
 
-### Загрузка данных
+### Мониторинг обучения
 
-Данные автоматически загружаются через DVC при первом запуске обучения. Если данные отсутствуют локально, они будут скачаны из удаленного хранилища (S3) или напрямую из открытых источников (если настроено).
+Во время обучения метрики автоматически логируются в MLflow:
 
-**Ручная загрузка данных:**
+- **Метрики**: train_loss, train_acc, val_loss, val_acc, val_f1
+- **Гиперпараметры**: все параметры модели и обучения
+- **Артефакты**:
+  - Чекпоинты моделей
+  - Графики метрик (loss_curve.png, acc_curve.png)
+  - Матрица ошибок (confusion_matrix.png)
+  - ONNX модель (если включен auto_export_onnx)
 
-```bash
-# Загрузка данных через DVC
-dvc pull data/ASL_Alphabet_Dataset.dvc
-```
-
-После загрузки данные будут находиться в `data/ASL_Alphabet_Dataset/`:
-
-```
-data/ASL_Alphabet_Dataset/
-├── asl_alphabet_train/    # Обучающая выборка
-│   ├── A/
-│   ├── B/
-│   └── ...
-└── asl_alphabet_test/     # Тестовая выборка
-```
+Откройте http://localhost:8080 для просмотра экспериментов.
 
 ### Предобработка данных
 
@@ -254,33 +212,6 @@ python -m asl_project.commands train \
     seed=42
 ```
 
-### Мониторинг обучения
-
-Во время обучения метрики автоматически логируются в MLflow:
-
-- **Метрики**: train_loss, train_acc, val_loss, val_acc, val_f1
-- **Гиперпараметры**: все параметры модели и обучения
-- **Артефакты**:
-  - Чекпоинты моделей
-  - Графики метрик (loss_curve.png, acc_curve.png)
-  - Матрица ошибок (confusion_matrix.png)
-  - ONNX модель (если включен auto_export_onnx)
-
-**Запуск MLflow UI:**
-
-```bash
-# Запуск PostgreSQL для MLflow (если используется)
-docker-compose up -d postgres
-
-# Запуск MLflow UI
-mlflow ui --backend-store-uri postgresql://mlflow:mlflow@localhost:5433/mlflow --port 8080
-
-# Или с локальным хранилищем
-mlflow ui --port 8080
-```
-
-Откройте http://localhost:8080 для просмотра экспериментов.
-
 ### Результаты обучения
 
 После обучения:
@@ -352,90 +283,3 @@ python -m asl_project.commands webcam \
 ```
 
 Веб-камера откроет окно с предпросмотром, где будет выделена область для распознавания (400x400 пикселей в центре кадра).
-
-### Формат входных данных
-
-**Требования к входным данным:**
-
-- **Формат файлов**: JPEG, PNG
-- **Размер**: Автоматически ресайзится до 200x200 (настраивается в конфиге через `img_size`)
-- **Каналы**: RGB (3 канала)
-- **Нормализация**: ImageNet статистики (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-**Препроцессинг выполняется автоматически:**
-
-1. Загрузка изображения
-2. Конвертация BGR → RGB
-3. Resize до 200x200
-4. Нормализация ImageNet статистиками
-5. Преобразование в тензор [1, 3, 200, 200]
-
-### Пример данных
-
-Примеры изображений можно найти в датасете после загрузки через DVC:
-
-```bash
-# Загрузка данных
-dvc pull data/ASL_Alphabet_Dataset.dvc
-
-# Примеры изображений находятся в:
-# data/ASL_Alphabet_Dataset/asl_alphabet_train/A/A1.jpg
-# data/ASL_Alphabet_Dataset/asl_alphabet_train/B/B1.jpg
-# и т.д.
-
-# Тестовые изображения:
-# data/ASL_Alphabet_Dataset/asl_alphabet_test/A_test.jpg
-# data/ASL_Alphabet_Dataset/asl_alphabet_test/B_test.jpg
-```
-
-**Структура датасета:**
-
-```
-asl_alphabet_train/
-├── A/
-│   ├── A1.jpg
-│   ├── A2.jpg
-│   └── ...
-├── B/
-│   ├── B1.jpg
-│   └── ...
-├── ...
-├── del/
-├── nothing/
-└── space/
-```
-
-**Пример запуска инференса на тестовом изображении:**
-
-```bash
-python -m asl_project.commands infer \
-    image_path=data/ASL_Alphabet_Dataset/asl_alphabet_test/A_test.jpg
-```
-
-**Ожидаемый вывод:**
-
-```
-Result: A (confidence: 0.95)
-```
-
-### Конфигурация инференса
-
-Основные параметры настраиваются в `configs/inference.yaml` или переопределяются через CLI:
-
-- `runtime`: "onnx" или "torch" - выбор рантайма для инференса
-- `onnx_path`: путь к ONNX модели (по умолчанию `models/model.onnx`)
-- `checkpoint_path`: путь к PyTorch checkpoint (для runtime=torch)
-- `confidence_threshold`: минимальный порог уверенности (по умолчанию 0.3)
-- `img_size`: размер входного изображения [200, 200]
-- `class_names`: список из 29 классов ASL алфавита
-
-**Пример переопределения параметров:**
-
-```bash
-python -m asl_project.commands infer \
-    image_path=path/to/image.jpg \
-    runtime=onnx \
-    onnx_path=models/model.onnx \
-    confidence_threshold=0.5 \
-    img_size=[224,224]
-```
