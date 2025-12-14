@@ -1,5 +1,7 @@
 [core]
-    remote = yandex
+    remote = yandexhttp
 ['remote "yandex"']
     url = s3://iakubovkamil-s3/dvc-store
     endpointurl = https://storage.yandexcloud.net
+['remote "yandexhttp"']
+    url = https://iakubovkamil-s3.s3.yandexcloud.net/dvc-store
